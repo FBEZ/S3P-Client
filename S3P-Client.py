@@ -10,6 +10,7 @@ import socket
 import struct
 import sys
 import settings
+import S3P_commands
 
 def send_frame(ifname, dstmac, eth_type, payload):
     # Open raw socket and bind it to network interface.
@@ -23,7 +24,8 @@ def send_frame(ifname, dstmac, eth_type, payload):
     srcmac = ':'.join('%02x' % b for b in info[18:24])
 
     # Build Ethernet frame
-    payload_bytes = payload.encode('utf-8')
+    #payload_bytes = payload.encode('utf-8')
+    payload_bytes=payload
     assert len(payload_bytes) <= 1500  # Ethernet MTU
 
     frame = human_mac_to_bytes(dstmac) + \
@@ -37,11 +39,23 @@ def send_frame(ifname, dstmac, eth_type, payload):
 def human_mac_to_bytes(addr):
     return bytes.fromhex(addr.replace(':', ''))
 
+
+def encode_s3p_frame(destination_address, command,argument):
+    if(command not in S3P_commands.commands.keys()):
+        raise ValueError("The command is not recognized")
+    return destination_address + \
+        settings.S3P_settings["s3p_address"] + \
+        S3P_commands.commands[command] + \
+        argument
+
+
 def main():
-  ifname = settings.settings["ethernet_interface"]
-  dstmac = settings.settings["destination_mac"]
-  payload = sys.argv[1]
-  ethtype = b'\x7A\x05'  # arbitrary, non-reserved
+  ifname = settings.ethernet_settings["ethernet_interface"]
+  dstmac = settings.ethernet_settings["destination_mac"]
+  destination_address = bytes([0x1,0x2,0x3,0x4])
+  argument = bytes([0x0,0x1,0xFF,0xCA,0xfe])
+  payload = encode_s3p_frame(destination_address,"WSH", argument)
+  ethtype = settings.ethernet_settings["ethertype"] 
   send_frame(ifname, dstmac, ethtype, payload)
 
 if __name__ == "__main__":
