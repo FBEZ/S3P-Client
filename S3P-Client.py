@@ -9,6 +9,7 @@ import fcntl
 import socket
 import struct
 import sys
+import settings
 
 def send_frame(ifname, dstmac, eth_type, payload):
     # Open raw socket and bind it to network interface.
@@ -37,9 +38,9 @@ def human_mac_to_bytes(addr):
     return bytes.fromhex(addr.replace(':', ''))
 
 def main():
-  ifname = sys.argv[1]
-  dstmac = sys.argv[2]
-  payload = sys.argv[3]
+  ifname = settings.settings["ethernet_interface"]
+  dstmac = settings.settings["destination_mac"]
+  payload = sys.argv[1]
   ethtype = b'\x7A\x05'  # arbitrary, non-reserved
   send_frame(ifname, dstmac, ethtype, payload)
 
