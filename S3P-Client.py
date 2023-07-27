@@ -58,15 +58,33 @@ def encode_s3p_frame(destination_address, command,arguments):
   if(command not in S3P_commands.commands.keys()):
         raise ValueError("The command is not recognized")
   argument = bytes([])
-  for k in range(len(arguments)):
+  for k in arguments:
+        #print(k)
+        #print(k.to_bytes(4,'big'))
         argument = argument + k.to_bytes(4,'big')
         
   return int(destination_address,16).to_bytes(4,"big") + \
         settings.S3P_settings["s3p_address"] + \
         int(S3P_commands.commands[command]).to_bytes(3,'big') + \
-        len(argument).to_bytes(1,'big') + \
+        len(arguments).to_bytes(1,'big') + \
         argument
 
+
+def get_arguments_from_command(command):
+  """Returns the arguments from the command, if required
+
+  Args:
+      command (string): command
+  """
+  args = []
+  if(command == 'STO'):
+     time_t = time.time()
+     time_s = int(time_t)
+     time_us = round(1e6*(time_t%1))
+     args.append(time_s)
+     args.append(time_us)
+
+  return args
 
 def main():
   ifname = settings.ethernet_settings["ethernet_interface"]
@@ -84,11 +102,15 @@ def main():
       if(len(k.split())>2):
         arguments = k.split()[2:] # all other arguments except the first
       else:
-        arguments = []
+        arguments = get_arguments_from_command(command)
+      #print(arguments)
       
       payload = encode_s3p_frame(destination_address,command, arguments)
-      print("Sending command "+command+" to "+destination_address)
+      #print(payload)
+      print("\nSending command "+command+" to "+destination_address + " with arguments ")
+      print(arguments)
       send_frame(ifname, dstmac, ethtype, payload)
+      print("Sent! ***********")
       time.sleep(1)
 
 if __name__ == "__main__":
