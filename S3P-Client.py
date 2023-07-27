@@ -11,6 +11,7 @@ import struct
 import sys
 import settings
 import S3P_commands
+import time
 
 def send_frame(ifname, dstmac, eth_type, payload):
     # Open raw socket and bind it to network interface.
@@ -40,23 +41,55 @@ def human_mac_to_bytes(addr):
     return bytes.fromhex(addr.replace(':', ''))
 
 
-def encode_s3p_frame(destination_address, command,argument):
-    if(command not in S3P_commands.commands.keys()):
+def encode_s3p_frame(destination_address, command,arguments):
+  """Ecodes the frame for s3p protocol 
+
+  Args:
+      destination_address (int): s3p address 
+      command (string): Command name
+      arguments (array of int): additional arguments
+
+  Raises:
+      ValueError: if the command is not recognized
+
+  Returns:
+      bytes array: payload to be used in an ethernet frame
+  """
+  if(command not in S3P_commands.commands.keys()):
         raise ValueError("The command is not recognized")
-    return destination_address + \
+  argument = bytes([])
+  for k in range(len(arguments)):
+        argument = argument + k.to_bytes(4,'big')
+        
+  return int(destination_address,16).to_bytes(4,"big") + \
         settings.S3P_settings["s3p_address"] + \
-        S3P_commands.commands[command] + \
+        int(S3P_commands.commands[command]).to_bytes(3,'big') + \
+        len(argument).to_bytes(1,'big') + \
         argument
 
 
 def main():
   ifname = settings.ethernet_settings["ethernet_interface"]
   dstmac = settings.ethernet_settings["destination_mac"]
-  destination_address = bytes([0x1,0x2,0x3,0x4])
-  argument = bytes([0x0,0x1,0xFF,0xCA,0xfe])
-  payload = encode_s3p_frame(destination_address,"WSH", argument)
-  ethtype = settings.ethernet_settings["ethertype"] 
-  send_frame(ifname, dstmac, ethtype, payload)
+  ethtype = settings.ethernet_settings["ethertype"]
+
+  f=open("command_list.txt","r")
+  for k in f.readlines():
+      
+      if(len(k.split())<2):
+        raise ValueError("Too few arguments")
+      command = k.split()[0]
+      destination_address = k.split()[1]
+
+      if(len(k.split())>2):
+        arguments = k.split()[2:] # all other arguments except the first
+      else:
+        arguments = []
+      
+      payload = encode_s3p_frame(destination_address,command, arguments)
+      print("Sending command "+command+" to "+destination_address)
+      send_frame(ifname, dstmac, ethtype, payload)
+      time.sleep(1)
 
 if __name__ == "__main__":
     main()

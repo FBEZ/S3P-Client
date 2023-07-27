@@ -1,8 +1,10 @@
 commands = {
-    "WSH" : bytes([0x0]),
-    "SAM" : bytes([0x1]),
-    "SAS" : bytes([0x2]),
-    "STO" : bytes([0x3]),
-    "GTA" : bytes([0x4]),
-    "RTA" : bytes([0x5])
+    "WSH" : 0,
+    "IAH" : 1,
+    "SAM" : 2,
+    "SAS" : 3,
+    "STO" : 4,
+    "GTA" : 5,
+    "RTA" : 6,
+    "ACK" : 7
 }
