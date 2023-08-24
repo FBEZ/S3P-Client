@@ -6,5 +6,11 @@ commands = {
     "STO" : 4,
     "GTA" : 5,
     "RTA" : 6,
-    "ACK" : 7
+    "ACK" : 7,
+    "SYN" : 8,
+    "DRQ" : 9,
+    "DRE" : 10,
+    "MCO" : 11,
+    "MSR" : 12,
+    "RST" : 13
 }

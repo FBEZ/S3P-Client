@@ -77,12 +77,19 @@ def get_arguments_from_command(command):
       command (string): command
   """
   args = []
-  if(command == 'STO'):
+  if(command == 'STO' or command == 'SYN' or command =='MCO'):
      time_t = time.time()
      time_s = int(time_t)
      time_us = round(1e6*(time_t%1))
      args.append(time_s)
      args.append(time_us)
+  
+  if(command == 'MCO'):
+     args[0] = args[0]+5 # starting samples in 10 seconds
+     args.append(0) # 10 samples (64bit)
+     args.append(50)
+     args.append(5000) # sampling period 1000 us
+  
 
   return args
 
@@ -111,7 +118,11 @@ def main():
       print(arguments)
       send_frame(ifname, dstmac, ethtype, payload)
       print("Sent! ***********")
-      time.sleep(1)
+      
+      if(command == "RST"):
+        time.sleep(5)
+      else:
+         time.sleep(1)
 
 if __name__ == "__main__":
     main()
